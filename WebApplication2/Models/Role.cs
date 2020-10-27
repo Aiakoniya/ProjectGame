@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace WebApplication2.Models
 {
-    public class Role
+    public static class Role
     {
-        public int ID { get; set; }
-        public string position { get; set; }
-
+        public const string Administrator = "Administrator";
+        public const string SimplePlayer = "SimplePlayer";
     }
 }

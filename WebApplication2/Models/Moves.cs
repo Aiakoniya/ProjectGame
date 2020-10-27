@@ -7,8 +7,9 @@ namespace WebApplication2.Models
 {
     public class Moves
     {
+        public Guid Id { get; set; }
         public int MovesNum { get; set; }
-        public int PlayerId { get; set; }
-        public int PlayerScore { get; set; }
+        public Guid PlayerId { get; set; }
+        public Player PlayerScore { get; set; }
     }
 }

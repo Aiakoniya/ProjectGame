@@ -7,10 +7,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using WebApplication2.Models;
 using WebApplication2.Repositories.Interfaces;
+using WebApplication2.Controllers;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using WebApplication2.DTOs;
 
 namespace WebApplication2.Controllers
 {
-    [Route("api/[controller")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -24,62 +30,35 @@ namespace WebApplication2.Controllers
             _config = config;
         }
 
-
-        [HttpPost("register")]
-
-        public IActionResult Register(PlayerRegisterDto userRegisterDTO)
+        [HttpPost("login")]
+        public IActionResult Login(PlayerLoginDto playerLoginDTO)
         {
-            userRegisterDTO.Username = userRegisterDTO.Username.ToLower();
+            var user = _authRepository.Login(playerLoginDTO.Name.ToLower(), playerLoginDTO.Difficulty.ToLower());
 
-            if (_authRepository.UserExists(userRegisterDTO.Username))
-                return BadRequest("Username already exists!");
+            if (user == null)
+                return Unauthorized();
 
-            var studentToCreate = new Player
+            var claims = new[]
             {
-                Name = userRegister
+                new Claim(ClaimTypes.NameIdentifier, ClaimsIdentity.DefaultNameClaimType),
+                new Claim(ClaimTypes.Name, user.Difficulty)
             };
-        }
 
-        // GET: AuthController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:Token").Value));
 
-        // POST: AuthController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddHours(3),
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature)
+            };
 
-        // GET: AuthController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: AuthController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return Ok(new
             {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+                token = tokenHandler.WriteToken(token)
+            });
         }
     }
 }

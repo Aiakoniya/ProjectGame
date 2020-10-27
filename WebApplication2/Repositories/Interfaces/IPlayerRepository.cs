@@ -8,7 +8,7 @@ namespace WebApplication2.Repositories.Interfaces
 {
     public interface IPlayerRepository
     {
-        Task<IEnumerable<Player>> GetPLayers();
+        Task<IEnumerable<Player>> GetPlayers();
         Task<bool> AddPlayer(Player p);
     }
 }

@@ -8,8 +8,10 @@ using WebApplication2.Models;
 
 namespace WebApplication2.Repositories.Interfaces
 {
-    public class IAuthRepository
+    public interface IAuthRepository
     {
-        Player 
+        Player Login(string name, string difficulty);
+
+        bool UserExists(string name);
     }
 }

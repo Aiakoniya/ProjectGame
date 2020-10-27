@@ -17,8 +17,10 @@ using WebApplication2.Repositories.Interfaces;
 using WebApplication2.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using Newtonsoft.Json;
+using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
-using Npgsql;
+using WebApplication2.Controllers;
 
 namespace WebApplication2
 {
@@ -35,12 +37,12 @@ namespace WebApplication2
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(options => options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddControllers().AddNewtonsoftJson(ppt =>
+            services.AddControllers().AddNewtonsoftJson(opt =>
             {
                 opt.SerializerSettings.ReferenceLoopHandling =
                 Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
+            services.AddSignalR();
             services.AddCors();
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();
@@ -51,10 +53,9 @@ namespace WebApplication2
                     {
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings : Token").Value),
+                            Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings : Token").Value)),
                             ValidateIssuer = false,
                             ValidateAudience = false
-                            )
                     };
                 });
         }
@@ -66,24 +67,16 @@ namespace WebApplication2
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler(builder =>
-                {
-                    builder.Run(async context =>
-                    {
-                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        var error = context.Features.Get<IExceptionHandlerFeature>();
-                        if (error != null)
-                        {
 
-                        }
-                    });
-                });
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
-                app.UseHttpsRedirection();
+                // app.UseHttpsRedirection();
+
+                app.UseFileServer();
 
                 app.UseRouting();
+
+                app.UseAuthentication();
 
                 app.UseAuthorization();
 
@@ -94,4 +87,3 @@ namespace WebApplication2
             }
         }
     }
-}
