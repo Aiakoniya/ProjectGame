@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using WebApplication2.Controllers;
+using AutoMapper;
 
 namespace WebApplication2
 {
@@ -44,33 +45,35 @@ namespace WebApplication2
             });
             services.AddSignalR();
             services.AddCors();
+            services.AddAutoMapper(typeof(PlayerRepository).Assembly);
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings : Token").Value)),
-                            ValidateIssuer = false,
-                            ValidateAudience = false
-                    };
-                });
+               {
+                   options.TokenValidationParameters = new TokenValidationParameters
+                   {
+                       ValidateIssuerSigningKey = true,
+                       IssuerSigningKey = new SymmetricSecurityKey(
+                           Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings : Token").Value)),
+                       ValidateIssuer = false,
+                       ValidateAudience = false
+                   };
+               });
+
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
+            // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                app.UseDeveloperExceptionPage();
-            }
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
+                }
 
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+                app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
-                // app.UseHttpsRedirection();
+                app.UseHttpsRedirection();
 
                 app.UseFileServer();
 
